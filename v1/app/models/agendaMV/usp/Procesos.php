@@ -744,6 +744,7 @@ class Procesos extends Models implements IModels
 
         try {
 
+            // Parametros de consulta
             $pn_paciente = $this->cita['nhc'];
             $pc_nm_paciente = $this->cita['paciente'];
             $pn_prestador = ($type == '1' ? $cdPrestadorAgenda : $codPrestador);
