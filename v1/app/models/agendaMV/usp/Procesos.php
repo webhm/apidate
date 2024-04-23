@@ -590,8 +590,10 @@ class Procesos extends Models implements IModels
             global $http;
 
             $this->cita = $http->request->all();
-
             $esmultiple = false;
+            $contadorMedico = 0;
+            $CD_PRESTADOR = '';
+
             $posicion_coincidencia = strpos($this->cita['idCalendar'], ',');
             if ($posicion_coincidencia !== false) {
                 $esmultiple = true;
@@ -609,10 +611,21 @@ class Procesos extends Models implements IModels
                         }
                     }
                     if ($key['TIPO'] == '2') {
+                        $CD_PRESTADOR = $key['IDCALENDAR'];
+                        $contadorMedico++;
                         if ($this->validarAgendas($this->cita, 2, $key['IDCALENDAR']) == false) {
                             throw new ModelsException("No existe disponibilidad de Agendas. Verifique la generación y liberación de turnos o escalas en MV. Referencia: " . $key['CALENDAR']);
                         }
                     }
+                }
+
+                #Validación de Médico
+                if ($contadorMedico == 0) {
+                    throw new ModelsException("No se puede completar este agendamiento. Es necesario seleccionar la agenda de un Médico para continuar. ");
+                }
+
+                if ($contadorMedico > 1) {
+                    throw new ModelsException("No se puede completar este agendamiento. Solo se debe escoger la agenda de un Médico para continuar.");
                 }
 
                 $res = array();
@@ -621,7 +634,7 @@ class Procesos extends Models implements IModels
                     sleep(0.5);
                     if ($key['TIPO'] == '1') {
                         // Es agenda de recurso
-                        $sts = $this->callCita(1, $key['IDCALENDAR']);
+                        $sts = $this->callCita(1, $key['IDCALENDAR'],  $CD_PRESTADOR);
                         if (!$sts['status']) {
                             throw new ModelsException("Error en Agendamiento");
                         }
@@ -657,12 +670,24 @@ class Procesos extends Models implements IModels
                             }
                         }
                         if ($key['TIPO'] == '2') {
+                            $CD_PRESTADOR = $key['IDCALENDAR'];
+                            $contadorMedico++;
                             if ($this->validarAgendas($this->cita, 2, $key['IDCALENDAR']) == false) {
                                 throw new ModelsException("No existe disponibilidad de Agendas. Verifique la generación y liberación de turnos o escalas en MV. Referencia: " . $key['CALENDAR']);
                             }
                         }
                     }
                 }
+
+                #Validación de Médico
+                if ($contadorMedico == 0) {
+                    throw new ModelsException("No se puede completar este agendamiento. Es necesario seleccionar la agenda de un Médico para continuar. ");
+                }
+
+                if ($contadorMedico > 1) {
+                    throw new ModelsException("No se puede completar este agendamiento. Solo se debe escoger la agenda de un Médico para continuar.");
+                }
+
 
                 $res = array();
 
@@ -671,7 +696,7 @@ class Procesos extends Models implements IModels
                     if ($key['IDCALENDAR'] == $this->cita['idCalendar']) {
                         if ($key['TIPO'] == '1') {
                             // Es agenda de recurso
-                            $sts = $this->callCita(1, $key['IDCALENDAR']);
+                            $sts = $this->callCita(1, $key['IDCALENDAR'],  $CD_PRESTADOR);
                             if (!$sts['status']) {
                                 throw new ModelsException("Error en Agendamiento");
                             }
@@ -705,7 +730,7 @@ class Procesos extends Models implements IModels
     /**
      * Permite registrar una nueva Cita
      */
-    public function callCita($type = '', $codPrestador = '')
+    public function callCita($type = '', $codPrestador = '',  $cdPrestadorAgenda = '')
     {
 
         //Inicialización de variables
@@ -721,7 +746,7 @@ class Procesos extends Models implements IModels
 
             $pn_paciente = $this->cita['nhc'];
             $pc_nm_paciente = $this->cita['paciente'];
-            $pn_prestador = $codPrestador;
+            $pn_prestador = ($type == '1' ? $cdPrestadorAgenda : $codPrestador);
             $pn_prestador_solicita = $this->cita['cd_prestador'];
             $pc_inicio = $this->cita['inicio'];
             $pc_fin = $this->cita['fin'];
