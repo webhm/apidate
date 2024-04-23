@@ -12,9 +12,9 @@ database:
   drivers:
     mysql:
       host: localhost
-      user: root
-      pass: 
-      name: admin_hmetro
+      user: admin_apidate
+      pass: Mcmd47?21
+      name: admin_apidate
       port: default
       socket: default
     mysqlAuth:
