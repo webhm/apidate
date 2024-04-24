@@ -478,21 +478,6 @@ class Procesos extends Models implements IModels
 
                 $calendarios = $this->cita['calendarios'];
 
-
-                # Validacion de agendamiento
-                foreach ($calendarios as $key) {
-                    if ($key['TIPO'] == '1') {
-                        if ($this->validarAgendasReagendar($this->cita, 1, $key['IDCALENDAR']) == false) {
-                            throw new ModelsException("No existe disponibilidad de Agendas. Verifique la generación y liberación de turnos o escalas en MV. Referencia: " . $key['CALENDAR']);
-                        }
-                    }
-                    if ($key['TIPO'] == '2') {
-                        if ($this->validarAgendasReagendar($this->cita, 2, $key['IDCALENDAR']) == false) {
-                            throw new ModelsException("No existe disponibilidad de Agendas. Verifique la generación y liberación de turnos o escalas en MV. Referencia: " . $key['CALENDAR']);
-                        }
-                    }
-                }
-
                 $res = array();
 
                 foreach ($calendarios as $key) {
@@ -526,22 +511,6 @@ class Procesos extends Models implements IModels
 
                 $calendarios = $this->cita['calendarios'];
 
-                # Validacion de agendamiento
-                foreach ($calendarios as $key) {
-                    if ($key['IDCALENDAR'] == $this->cita['idCalendar']) {
-                        if ($key['TIPO'] == '1') {
-                            if ($this->validarAgendasReagendar($this->cita, 1, $key['IDCALENDAR']) == false) {
-                                throw new ModelsException("No existe disponibilidad de Agendas. Verifique la generación y liberación de turnos o escalas en MV. Referencia: " . $key['CALENDAR']);
-                            }
-                        }
-                        if ($key['TIPO'] == '2') {
-                            if ($this->validarAgendasReagendar($this->cita, 2, $key['IDCALENDAR']) == false) {
-                                throw new ModelsException("No existe disponibilidad de Agendas. Verifique la generación y liberación de turnos o escalas en MV. Referencia: " . $key['CALENDAR']);
-                            }
-                        }
-                    }
-                }
-
                 $res = array();
 
                 foreach ($calendarios as $key) {
@@ -573,6 +542,76 @@ class Procesos extends Models implements IModels
                         'message' => 'Proceso realizado con éxito.',
                     );
                 }
+            }
+        } catch (ModelsException $e) {
+            return array('status' => false, 'message' => $e->getMessage());
+        }
+    }
+
+    public function trackCallUpCitaValidate()
+    {
+
+        try {
+
+            global $http;
+
+            $this->cita = $http->request->all();
+
+            $esmultiple = false;
+            $posicion_coincidencia = strpos($this->cita['idCalendar'], ',');
+            if ($posicion_coincidencia !== false) {
+                $esmultiple = true;
+            }
+
+            if ($esmultiple) {
+
+                $calendarios = $this->cita['calendarios'];
+
+
+                # Validacion de agendamiento
+                foreach ($calendarios as $key) {
+                    if ($key['TIPO'] == '1') {
+                        if ($this->validarAgendasReagendar($this->cita, 1, $key['IDCALENDAR']) == false) {
+                            throw new ModelsException("No existe disponibilidad de Agendas. Verifique la generación y liberación de turnos o escalas en MV. Referencia: " . $key['CALENDAR']);
+                        }
+                    }
+                    if ($key['TIPO'] == '2') {
+                        if ($this->validarAgendasReagendar($this->cita, 2, $key['IDCALENDAR']) == false) {
+                            throw new ModelsException("No existe disponibilidad de Agendas. Verifique la generación y liberación de turnos o escalas en MV. Referencia: " . $key['CALENDAR']);
+                        }
+                    }
+                }
+
+                return array(
+                    'status' => true,
+                    'data' => [],
+                    'message' => 'Proceso realizado con éxito.',
+                );
+            } else {
+
+                $calendarios = $this->cita['calendarios'];
+
+                # Validacion de agendamiento
+                foreach ($calendarios as $key) {
+                    if ($key['IDCALENDAR'] == $this->cita['idCalendar']) {
+                        if ($key['TIPO'] == '1') {
+                            if ($this->validarAgendasReagendar($this->cita, 1, $key['IDCALENDAR']) == false) {
+                                throw new ModelsException("No existe disponibilidad de Agendas. Verifique la generación y liberación de turnos o escalas en MV. Referencia: " . $key['CALENDAR']);
+                            }
+                        }
+                        if ($key['TIPO'] == '2') {
+                            if ($this->validarAgendasReagendar($this->cita, 2, $key['IDCALENDAR']) == false) {
+                                throw new ModelsException("No existe disponibilidad de Agendas. Verifique la generación y liberación de turnos o escalas en MV. Referencia: " . $key['CALENDAR']);
+                            }
+                        }
+                    }
+                }
+
+                return array(
+                    'status' => true,
+                    'data' => [],
+                    'message' => 'Proceso realizado con éxito.',
+                );
             }
         } catch (ModelsException $e) {
             return array('status' => false, 'message' => $e->getMessage());

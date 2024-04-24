@@ -39,6 +39,11 @@ $app->post('/citas/upcall', function () use ($app) {
     return $app->json($u->trackCallUpCita());
 });
 
+$app->post('/citas/upcall-validate', function () use ($app) {
+    $u = new UspModel\Procesos;
+    return $app->json($u->trackCallUpCitaValidate());
+});
+
 $app->post('/citas/delcall', function () use ($app) {
     $u = new UspModel\Procesos;
     return $app->json($u->trackCallDeleteCita());
