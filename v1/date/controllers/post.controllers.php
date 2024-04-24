@@ -28,6 +28,11 @@ $app->post('/citas/call', function () use ($app) {
     return $app->json($u->trackCallCita());
 });
 
+$app->post('/citas/call-validate', function () use ($app) {
+    $u = new UspModel\Procesos;
+    return $app->json($u->trackCallValidateCita());
+});
+
 $app->post('/citas/upcall', function () use ($app) {
     $u = new UspModel\Procesos;
     return $app->json($u->trackCallUpCita());

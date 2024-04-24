@@ -580,7 +580,7 @@ class Procesos extends Models implements IModels
     }
 
     /**
-     * Permite registrar un nuevo paciente
+     * Permite registrar una nueva cita
      */
     public function trackCallCita()
     {
@@ -594,6 +594,117 @@ class Procesos extends Models implements IModels
             $contadorMedico = 0;
             $contadorRecurso = 0;
             $CD_PRESTADOR = '';
+
+            $posicion_coincidencia = strpos($this->cita['idCalendar'], ',');
+            if ($posicion_coincidencia !== false) {
+                $esmultiple = true;
+            }
+
+            if ($esmultiple) {
+
+                $calendarios = $this->cita['calendarios'];
+
+
+                # Validacion de agendamiento
+                foreach ($calendarios as $key) {
+                    if ($key['TIPO'] == '2') {
+                        $CD_PRESTADOR = $key['IDCALENDAR'];
+                    }
+                }
+
+
+                $res = array();
+
+                foreach ($calendarios as $key) {
+                    sleep(0.5);
+                    if ($key['TIPO'] == '1') {
+                        // Es agenda de recurso
+                        $sts = $this->callCita(1, $key['IDCALENDAR'],  $CD_PRESTADOR);
+                        if (!$sts['status']) {
+                            throw new ModelsException("Error en Agendamiento");
+                        }
+                        $res[] = $sts;
+                    }
+                    if ($key['TIPO'] == '2') {
+                        // Es agenda de medico/prestador
+                        $sts = $this->callCita(2, $key['IDCALENDAR']);
+                        if (!$sts['status']) {
+                            throw new ModelsException("Error en Agendamiento");
+                        }
+                        $res[] = $sts;
+                    }
+                }
+
+                if (count($res) !== 0) {
+                    return array(
+                        'status' => true,
+                        'data' => $res,
+                        'message' => 'Proceso realizado con éxito.',
+                    );
+                }
+            } else {
+
+                $calendarios = $this->cita['calendarios'];
+
+                # Validacion de agendamiento
+                foreach ($calendarios as $key) {
+                    if ($key['IDCALENDAR'] == $this->cita['idCalendar']) {
+                        if ($key['TIPO'] == '2') {
+                            $CD_PRESTADOR = $key['IDCALENDAR'];
+                        }
+                    }
+                }
+
+
+                $res = array();
+
+                foreach ($calendarios as $key) {
+                    sleep(0.5);
+                    if ($key['IDCALENDAR'] == $this->cita['idCalendar']) {
+                        if ($key['TIPO'] == '1') {
+                            // Es agenda de recurso
+                            $sts = $this->callCita(1, $key['IDCALENDAR'],  $CD_PRESTADOR);
+                            if (!$sts['status']) {
+                                throw new ModelsException("Error en Agendamiento");
+                            }
+                            $res[] = $sts;
+                        }
+                        if ($key['TIPO'] == '2') {
+                            // Es agenda de medico/prestador
+                            $sts = $this->callCita(2, $key['IDCALENDAR']);
+                            if (!$sts['status']) {
+                                throw new ModelsException("Error en Agendamiento");
+                            }
+                            $res[] = $sts;
+                        }
+                    }
+                }
+
+                if (count($res) !== 0) {
+                    return array(
+                        'status' => true,
+                        'data' => $res,
+                        'message' => 'Proceso realizado con éxito.',
+
+                    );
+                }
+            }
+        } catch (ModelsException $e) {
+            return array('status' => false, 'message' => $e->getMessage());
+        }
+    }
+
+    public function trackCallValidateCita()
+    {
+
+        try {
+
+            global $http;
+
+            $this->cita = $http->request->all();
+            $esmultiple = false;
+            $contadorMedico = 0;
+            $contadorRecurso = 0;
 
             $posicion_coincidencia = strpos($this->cita['idCalendar'], ',');
             if ($posicion_coincidencia !== false) {
@@ -642,7 +753,6 @@ class Procesos extends Models implements IModels
                         }
                     }
                     if ($key['TIPO'] == '2') {
-                        $CD_PRESTADOR = $key['IDCALENDAR'];
                         if ($this->validarAgendas($this->cita, 2, $key['IDCALENDAR']) == false) {
                             throw new ModelsException("No existe disponibilidad de Agendas. Verifique la generación y liberación de turnos o escalas en MV. Referencia: " . $key['CALENDAR']);
                         }
@@ -650,36 +760,11 @@ class Procesos extends Models implements IModels
                 }
 
 
-
-                $res = array();
-
-                foreach ($calendarios as $key) {
-                    sleep(0.5);
-                    if ($key['TIPO'] == '1') {
-                        // Es agenda de recurso
-                        $sts = $this->callCita(1, $key['IDCALENDAR'],  $CD_PRESTADOR);
-                        if (!$sts['status']) {
-                            throw new ModelsException("Error en Agendamiento");
-                        }
-                        $res[] = $sts;
-                    }
-                    if ($key['TIPO'] == '2') {
-                        // Es agenda de medico/prestador
-                        $sts = $this->callCita(2, $key['IDCALENDAR']);
-                        if (!$sts['status']) {
-                            throw new ModelsException("Error en Agendamiento");
-                        }
-                        $res[] = $sts;
-                    }
-                }
-
-                if (count($res) !== 0) {
-                    return array(
-                        'status' => true,
-                        'data' => $res,
-                        'message' => 'Proceso realizado con éxito.',
-                    );
-                }
+                return array(
+                    'status' => true,
+                    'data' => [],
+                    'message' => 'Proceso realizado con éxito.',
+                );
             } else {
 
                 $calendarios = $this->cita['calendarios'];
@@ -723,7 +808,6 @@ class Procesos extends Models implements IModels
                             }
                         }
                         if ($key['TIPO'] == '2') {
-                            $CD_PRESTADOR = $key['IDCALENDAR'];
                             if ($this->validarAgendas($this->cita, 2, $key['IDCALENDAR']) == false) {
                                 throw new ModelsException("No existe disponibilidad de Agendas. Verifique la generación y liberación de turnos o escalas en MV. Referencia: " . $key['CALENDAR']);
                             }
@@ -731,44 +815,17 @@ class Procesos extends Models implements IModels
                     }
                 }
 
-
-                $res = array();
-
-                foreach ($calendarios as $key) {
-                    sleep(0.5);
-                    if ($key['IDCALENDAR'] == $this->cita['idCalendar']) {
-                        if ($key['TIPO'] == '1') {
-                            // Es agenda de recurso
-                            $sts = $this->callCita(1, $key['IDCALENDAR'],  $CD_PRESTADOR);
-                            if (!$sts['status']) {
-                                throw new ModelsException("Error en Agendamiento");
-                            }
-                            $res[] = $sts;
-                        }
-                        if ($key['TIPO'] == '2') {
-                            // Es agenda de medico/prestador
-                            $sts = $this->callCita(2, $key['IDCALENDAR']);
-                            if (!$sts['status']) {
-                                throw new ModelsException("Error en Agendamiento");
-                            }
-                            $res[] = $sts;
-                        }
-                    }
-                }
-
-                if (count($res) !== 0) {
-                    return array(
-                        'status' => true,
-                        'data' => $res,
-                        'message' => 'Proceso realizado con éxito.',
-
-                    );
-                }
+                return array(
+                    'status' => true,
+                    'data' => [],
+                    'message' => 'Proceso realizado con éxito.',
+                );
             }
         } catch (ModelsException $e) {
             return array('status' => false, 'message' => $e->getMessage());
         }
     }
+
 
     /**
      * Permite registrar una nueva Cita
