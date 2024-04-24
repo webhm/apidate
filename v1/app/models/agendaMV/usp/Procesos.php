@@ -592,6 +592,7 @@ class Procesos extends Models implements IModels
             $this->cita = $http->request->all();
             $esmultiple = false;
             $contadorMedico = 0;
+            $contadorRecurso = 0;
             $CD_PRESTADOR = '';
 
             $posicion_coincidencia = strpos($this->cita['idCalendar'], ',');
@@ -603,6 +604,36 @@ class Procesos extends Models implements IModels
 
                 $calendarios = $this->cita['calendarios'];
 
+                # Validación agendamiento un recurso un prestador
+                foreach ($calendarios as $key) {
+                    if ($key['TIPO'] == '1') {
+                        $contadorRecurso++;
+                    }
+                    if ($key['TIPO'] == '2') {
+                        $contadorMedico++;
+                    }
+                }
+
+                # Validación de Médico
+                if ($contadorMedico == 0) {
+                    throw new ModelsException("No se puede completar este agendamiento. Es necesario seleccionar la agenda de un Médico para continuar. ");
+                }
+
+                if ($contadorMedico > 1) {
+                    throw new ModelsException("No se puede completar este agendamiento. Solo se debe escoger la agenda de un Médico para continuar.");
+                }
+
+                # Validación de Recurso
+                if ($contadorRecurso == 0) {
+                    throw new ModelsException("No se puede completar este agendamiento. Es necesario seleccionar la agenda de un Recurso o Sala para continuar. ");
+                }
+
+                if ($contadorRecurso > 1) {
+                    throw new ModelsException("No se puede completar este agendamiento. Solo se debe escoger la agenda de un Recurso o Sala para continuar.");
+                }
+
+
+
                 # Validacion de agendamiento
                 foreach ($calendarios as $key) {
                     if ($key['TIPO'] == '1') {
@@ -612,21 +643,13 @@ class Procesos extends Models implements IModels
                     }
                     if ($key['TIPO'] == '2') {
                         $CD_PRESTADOR = $key['IDCALENDAR'];
-                        $contadorMedico++;
                         if ($this->validarAgendas($this->cita, 2, $key['IDCALENDAR']) == false) {
                             throw new ModelsException("No existe disponibilidad de Agendas. Verifique la generación y liberación de turnos o escalas en MV. Referencia: " . $key['CALENDAR']);
                         }
                     }
                 }
 
-                #Validación de Médico
-                if ($contadorMedico == 0) {
-                    throw new ModelsException("No se puede completar este agendamiento. Es necesario seleccionar la agenda de un Médico para continuar. ");
-                }
 
-                if ($contadorMedico > 1) {
-                    throw new ModelsException("No se puede completar este agendamiento. Solo se debe escoger la agenda de un Médico para continuar.");
-                }
 
                 $res = array();
 
@@ -661,6 +684,36 @@ class Procesos extends Models implements IModels
 
                 $calendarios = $this->cita['calendarios'];
 
+                # Validación agendamiento un recurso un prestador
+                foreach ($calendarios as $key) {
+                    if ($key['IDCALENDAR'] == $this->cita['idCalendar']) {
+                        if ($key['TIPO'] == '1') {
+                            $contadorRecurso++;
+                        }
+                        if ($key['TIPO'] == '2') {
+                            $contadorMedico++;
+                        }
+                    }
+                }
+
+                # Validación de Médico
+                if ($contadorMedico == 0) {
+                    throw new ModelsException("No se puede completar este agendamiento. Es necesario seleccionar la agenda de un Médico para continuar. ");
+                }
+
+                if ($contadorMedico > 1) {
+                    throw new ModelsException("No se puede completar este agendamiento. Solo se debe escoger la agenda de un Médico para continuar.");
+                }
+
+                # Validación de Recurso
+                if ($contadorRecurso == 0) {
+                    throw new ModelsException("No se puede completar este agendamiento. Es necesario seleccionar la agenda de un Recurso o Sala para continuar. ");
+                }
+
+                if ($contadorRecurso > 1) {
+                    throw new ModelsException("No se puede completar este agendamiento. Solo se debe escoger la agenda de un Recurso o Sala para continuar.");
+                }
+
                 # Validacion de agendamiento
                 foreach ($calendarios as $key) {
                     if ($key['IDCALENDAR'] == $this->cita['idCalendar']) {
@@ -671,21 +724,11 @@ class Procesos extends Models implements IModels
                         }
                         if ($key['TIPO'] == '2') {
                             $CD_PRESTADOR = $key['IDCALENDAR'];
-                            $contadorMedico++;
                             if ($this->validarAgendas($this->cita, 2, $key['IDCALENDAR']) == false) {
                                 throw new ModelsException("No existe disponibilidad de Agendas. Verifique la generación y liberación de turnos o escalas en MV. Referencia: " . $key['CALENDAR']);
                             }
                         }
                     }
-                }
-
-                #Validación de Médico
-                if ($contadorMedico == 0) {
-                    throw new ModelsException("No se puede completar este agendamiento. Es necesario seleccionar la agenda de un Médico para continuar. ");
-                }
-
-                if ($contadorMedico > 1) {
-                    throw new ModelsException("No se puede completar este agendamiento. Solo se debe escoger la agenda de un Médico para continuar.");
                 }
 
 
