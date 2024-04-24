@@ -29,6 +29,7 @@ $app->post('/citas/call', function () use ($app) {
 });
 
 $app->post('/citas/call-validate', function () use ($app) {
+    //Es validacion
     $u = new UspModel\Procesos;
     return $app->json($u->trackCallValidateCita());
 });
