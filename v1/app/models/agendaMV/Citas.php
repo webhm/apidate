@@ -347,7 +347,7 @@ class Citas extends Models implements IModels
         if ($preparacion !== 0) {
             $content .= '<br/>
             <b>Preparación e Indicaciones: </b><br/> 
-            <p style="font-size:11px;text-align:justify">' . $preparacion . '</p>
+            <p style="font-size:11px;text-align:justify">' . str_replace("\n", "<br/>",  $preparacion) . '</p>
             <br/>
             <br/>';
         }
